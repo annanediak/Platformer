@@ -1,43 +1,57 @@
 import pygame
 import time
 
-print("""
+class Rect:
+    def __init__(self, top, bottom, left, right, color):
+        self.top = top
+        self.bottom = bottom
+        self.left = left
+        self.right = right
+        self.color = color
+    
+    def move_down(self, shift):
+        self.top += shift
+        self.bottom += shift
 
-  SONIC    SONIC    SONIC    SONIC    SONIC
-   THE      THE      THE      THE      THE
-HEDGEHOG HEDGEHOG HEDGEHOG HEDGEHOG HEDGEHOG
+    def move_right(self, offset):
+        self.left += offset
+        self.right += offset
 
-""")
+    def intersects(self, other):
+        return (self.left < other.right and self.right > other.left and
+                self.top > other.bottom and self.bottom < other.top)
+
+    def draw(self, win):
+        pygame.draw.rect(win, self.color, (self.left, self.top,
+                self.right - self.left, self.bottom - self.top))
+
 
 width = 500
 height = 500
 pygame.init()
 win = pygame.display.set_mode((width, height))
 
-xPlayer = 250
-yPlayer = 150
-pside = 25
+player_rect = Rect(150, 175, 250, 275, (0, 0, 255))
 
 acc = 1000
 vel = 0
 jumpVel = -400
-h_vel = 1242.5
+h_vel = 400 
 
-score = 0
+level = 0
 
 start_time = time.time()
 run = True
 while run:
-    print(xPlayer)
-    diff = time.time()-start_time
+    diff = time.time() - start_time
     print(diff)
     start_time = time.time()
 
     onGround = False
-    yPlayer += vel * diff
+    player_rect.move_down(vel * diff)
     vel += acc * diff
-    if yPlayer >= 240:
-        yPlayer = 240
+    if player_rect.bottom >= 240:
+        player_rect.move_down(240 - player_rect.bottom)
         vel = 0
         onGround = True
 
@@ -50,13 +64,14 @@ while run:
                     vel = jumpVel
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        xPlayer -= h_vel * diff 
+        player_rect.move_right(-h_vel * diff)
     if keys[pygame.K_RIGHT]:
-        xPlayer += h_vel * diff 
+        player_rect.move_right(h_vel * diff)
 
     win.fill((0, 0, 0))
-    pygame.draw.rect(win, (0, 0, 255), (xPlayer, yPlayer, pside, pside))
-    pygame.draw.rect(win, (65, 169, 76), (-5, 265, 510, 500))
+    player_rect.draw(win)
+    pygame.draw.rect(win, (65, 169, 76), (-5, 240, 510, 500))
     pygame.display.update()
 
     time.sleep(0.02 - (time.time() - start_time))
+
