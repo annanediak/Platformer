@@ -12,7 +12,7 @@ win = pygame.display.set_mode((width, height))
 acc = 1000
 vel = 0
 jumpVel = -400
-h_vel = 400 
+h_vel = 200 
 
 level = 0
 
