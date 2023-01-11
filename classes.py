@@ -16,6 +16,10 @@ class Rect:
         self.left += offset
         self.right += offset
 
+    def intersects(self, other):
+        dst, der = self.test_intersect(other)
+        return dst > 0
+
     def test_intersect(self, other):
         lst = [other.right - self.left, self.right - other.left,
                other.bottom - self.top, self.bottom - other.top]
@@ -26,6 +30,41 @@ class Rect:
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.left, self.top,
                 self.right - self.left, self.bottom - self.top))
+
+class Spike:
+    def __init__(self, x1, y1, x2, y2, x3, y3):
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.x3 = x3
+        self.y3 = y3
+
+    def getAxes(self):
+        return [(self.y1 - self.y2, -self.x1 - self.x2), (self.y2 - self.y3, -self.x2 - self.x3), (self.y3 - self.y1, -self.x3 - self.x1)]
+    
+    def intersects(self, other):
+        axes = self.getAxes() + [(-other.top-other.bottom, 0), (0, -other.left-other.right)]
+        others = [(other.left, other.top), (other.left, other.bottom), (other.right, other.top), (other.right, other.bottom)] 
+        selfs = [(self.x1, self.y1), (self.x2, self.y2), (self.x3, self.y3)]
+        for j in range(5):
+            axis = axes[j]
+            lst_other = []
+            for ver in others:
+                lst_other.append(axis[0]*ver[0]+axis[1]*ver[1])
+            other_min = min(lst_other)
+            other_max = max(lst_other)
+            lst_self = []
+            for ver in selfs:
+                lst_self.append(axis[0]*ver[0]+axis[1]*ver[1])
+            self_min = min(lst_self)
+            self_max = max(lst_self)
+            if self_min > other_max or self_max < other_min:
+                return False
+        return True
+    
+    def draw(self, win):
+        pygame.draw.polygon(win, (105,105,105), [(self.x1, self.y1), (self.x2, self.y2), (self.x3, self.y3)])
 
 class Level:
     def __init__(self, start_x, start_y, portal_rect, platforms, lavas):
@@ -56,8 +95,7 @@ class Level:
             return 3, on_ground, abuntahead
 
         for lava in self.lavas:
-            dist, der = player_rect.test_intersect(lava)
-            if dist > 0:
+            if lava.intersects(player_rect):
                 return 2, on_ground, abuntahead
         dist, der = player_rect.test_intersect(self.portal_rect)
         if dist > 0:
